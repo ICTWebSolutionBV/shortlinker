@@ -41,15 +41,9 @@ const showQr = ref(false)
 watch(useCustomAlias, (v) => { if (!v) form.alias = '' })
 watch(() => form.expires_in, (v) => { if (v !== 'custom') form.expires_at = '' })
 
-const ALIAS_CHARS = 'abcdegjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789'
-function randomAlias(len = 6) {
-    return Array.from({ length: len }, () => ALIAS_CHARS[Math.floor(Math.random() * ALIAS_CHARS.length)]).join('')
-}
-const placeholderAlias = randomAlias()
-
 const previewAlias = computed(() => {
     if (useCustomAlias.value && form.alias) return form.alias
-    return placeholderAlias
+    return null
 })
 
 const qrDataUrl = ref(null)
@@ -120,7 +114,8 @@ function submit() {
                         <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Short Link</label>
                         <div class="flex items-center gap-0 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                             <span class="px-3.5 py-3 text-gray-400 text-xs border-r border-gray-200 dark:border-gray-700 whitespace-nowrap shrink-0 font-mono">{{ appUrl }}/</span>
-                            <span class="px-3.5 py-3 text-primary-600 dark:text-primary-400 font-mono font-semibold text-sm tracking-wide">{{ previewAlias }}</span>
+                            <span v-if="previewAlias" class="px-3.5 py-3 text-primary-600 dark:text-primary-400 font-mono font-semibold text-sm tracking-wide">{{ previewAlias }}</span>
+                            <span v-else class="px-3.5 py-3 text-gray-400 dark:text-gray-500 text-xs italic">auto-generated on save</span>
                         </div>
 
                         <label class="flex items-center gap-3 cursor-pointer select-none group">

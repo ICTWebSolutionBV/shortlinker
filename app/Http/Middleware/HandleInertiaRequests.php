@@ -38,6 +38,7 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 'recovery_codes' => fn () => $request->session()->get('recovery_codes'),
+                'new_short_url' => fn () => $request->session()->get('new_short_url'),
             ],
         ];
     }
