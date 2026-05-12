@@ -19,6 +19,12 @@ Every push that ships production-visible changes should bump the appropriate seg
 
 _Nothing yet._
 
+## [1.0.1] — 2026-05-12
+
+### Fixed
+- Short URL was not copied to clipboard after creating a link from the backend — `new_short_url` flash value was not included in Inertia's shared props.
+- Create form showed a random alias preview that did not match the alias actually saved. The form now pre-fills with a random alias that is submitted as-is, so the preview and the created link are always the same. Toggling "Use a custom alias" off regenerates a new random alias; toggling it on allows a manual override.
+
 ## [1.0.0] — 2026-05-12
 
 First release of Shortlinker — a self-hosted URL shortener built with Laravel and Vue.js.
@@ -72,5 +78,6 @@ First release of Shortlinker — a self-hosted URL shortener built with Laravel 
 - In-app feedback widget (sends to `FEEDBACK_EMAIL`).
 - In-app "What's new" changelog modal.
 
-[Unreleased]: https://github.com/ICTWebSolutionBV/shortlinker/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/ICTWebSolutionBV/shortlinker/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/ICTWebSolutionBV/shortlinker/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/ICTWebSolutionBV/shortlinker/releases/tag/v1.0.0
