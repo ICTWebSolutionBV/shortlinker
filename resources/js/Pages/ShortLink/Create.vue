@@ -24,9 +24,14 @@ const expiryOptions = [
     { label: 'Custom…', value: 'custom' },
 ]
 
+const ALIAS_CHARS = 'abcdegjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789'
+function randomAlias(len = 6) {
+    return Array.from({ length: len }, () => ALIAS_CHARS[Math.floor(Math.random() * ALIAS_CHARS.length)]).join('')
+}
+
 const form = useForm({
     original_url: '',
-    alias: '',
+    alias: randomAlias(),
     title: '',
     is_active: true,
     is_burn: false,
@@ -38,13 +43,10 @@ const form = useForm({
 const useCustomAlias = ref(false)
 const showQr = ref(false)
 
-watch(useCustomAlias, (v) => { if (!v) form.alias = '' })
+watch(useCustomAlias, (v) => { if (!v) form.alias = randomAlias() })
 watch(() => form.expires_in, (v) => { if (v !== 'custom') form.expires_at = '' })
 
-const previewAlias = computed(() => {
-    if (useCustomAlias.value && form.alias) return form.alias
-    return null
-})
+const previewAlias = computed(() => form.alias || null)
 
 const qrDataUrl = ref(null)
 const loadingQr = ref(false)
