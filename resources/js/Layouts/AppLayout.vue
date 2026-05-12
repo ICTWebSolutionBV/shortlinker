@@ -421,7 +421,7 @@ watch(() => user.value?.theme_preference, (pref) => {
                     </div>
 
                     <div class="px-6 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                        <a href="https://github.com/ICTWebSolutionBV/qrlab/blob/main/CHANGELOG.md" target="_blank" rel="noopener"
+                        <a href="https://github.com/ICTWebSolutionBV/shortlinker/blob/main/CHANGELOG.md" target="_blank" rel="noopener"
                             class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                             View full CHANGELOG on GitHub ↗
                         </a>

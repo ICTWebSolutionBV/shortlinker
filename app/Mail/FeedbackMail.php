@@ -30,7 +30,7 @@ class FeedbackMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $subject = 'Feedback from ' . ($this->submitterName ?: $this->userName ?: $this->userEmail ?: 'QR Lab user');
+        $subject = 'Feedback from ' . ($this->submitterName ?: $this->userName ?: $this->userEmail ?: 'Shortlinker user');
 
         $replyTo = [];
         if ($this->submitterEmail) {

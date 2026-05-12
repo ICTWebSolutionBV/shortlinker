@@ -26,20 +26,26 @@ A self-hosted URL shortener built with Laravel and Vue.js. Shorten URLs instantl
   <img src="docs/screenshots/links-index.png" alt="URL shortener link list" width="48%" />
 </p>
 
-### Create link & administration
+### Create link & analytics
 
 <p align="center">
   <img src="docs/screenshots/create-link.png" alt="Create short link with options" width="48%" />
   &nbsp;
-  <img src="docs/screenshots/admin-stats.png" alt="Super-admin platform stats" width="48%" />
+  <img src="docs/screenshots/analytics.png" alt="Per-link click analytics" width="48%" />
 </p>
 
-### Login & profile
+### Admin stats & login
 
 <p align="center">
-  <img src="docs/screenshots/login.png" alt="Login page with passkey support" width="48%" />
+  <img src="docs/screenshots/admin-stats.png" alt="Super-admin platform stats" width="48%" />
   &nbsp;
-  <img src="docs/screenshots/profile.png" alt="Profile settings" width="48%" />
+  <img src="docs/screenshots/login.png" alt="Login page with passkey support" width="48%" />
+</p>
+
+### Profile
+
+<p align="center">
+  <img src="docs/screenshots/profile.png" alt="Profile settings" width="80%" />
 </p>
 
 ## Features
@@ -135,17 +141,18 @@ php artisan serve
 npm run dev
 ```
 
-Create your first user and promote to super_admin:
+Create your first super admin user — run this as a single command:
 
 ```bash
-php artisan tinker
-# >>> \App\Models\User::create(['name'=>'Your Name','email'=>'you@example.com','password'=>bcrypt('yourpassword'),'role'=>'super_admin']);
+php artisan tinker --execute="\App\Models\User::create(['name'=>'Admin','email'=>'admin@example.com','password'=>bcrypt('changeme'),'role'=>'super_admin']);"
 ```
+
+Then sign in at `/login` and change your password via the Profile page.
 
 Or promote an existing user:
 
 ```bash
-php artisan user:promote you@example.com super_admin
+php artisan user:promote admin@example.com super_admin
 ```
 
 ## Deploying with Ploi
