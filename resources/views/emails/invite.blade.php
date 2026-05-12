@@ -49,7 +49,7 @@
                                         <p style="font-size:20px;font-weight:700;color:#111827;margin:0 0 8px;">You're invited!</p>
                                         <p style="font-size:15px;color:#6b7280;line-height:1.7;margin:0 0 28px;">
                                             Hi{{ $firstName ? ' ' . e($firstName) : '' }},<br /><br />
-                                            <span style="color:#374151;font-weight:600;">{{ e($inviterName) }}</span> has invited you to join <span style="color:#374151;font-weight:600;">{{ $appName }}</span> — a QR code platform for creating, managing, and tracking QR codes.
+                                            <span style="color:#374151;font-weight:600;">{{ e($inviterName) }}</span> has invited you to join <span style="color:#374151;font-weight:600;">{{ $appName }}</span> — a self-hosted URL shortener for creating, managing, and tracking short links.
                                         </p>
 
                                         <!-- CTA button -->
