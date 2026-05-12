@@ -41,9 +41,15 @@ const showQr = ref(false)
 watch(useCustomAlias, (v) => { if (!v) form.alias = '' })
 watch(() => form.expires_in, (v) => { if (v !== 'custom') form.expires_at = '' })
 
+const ALIAS_CHARS = 'abcdegjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789'
+function randomAlias(len = 6) {
+    return Array.from({ length: len }, () => ALIAS_CHARS[Math.floor(Math.random() * ALIAS_CHARS.length)]).join('')
+}
+const placeholderAlias = randomAlias()
+
 const previewAlias = computed(() => {
     if (useCustomAlias.value && form.alias) return form.alias
-    return 'xxxxxx'
+    return placeholderAlias
 })
 
 const qrDataUrl = ref(null)
