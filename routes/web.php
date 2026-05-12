@@ -1,0 +1,121 @@
+<?php
+
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\PasskeyLoginController;
+use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Auth\TwoFactorChallengeController;
+use App\Http\Controllers\TwoFactorEnrollmentController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\ShortLinkStatsController as AdminShortLinkStatsController;
+use App\Http\Controllers\ChangelogController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\InviteController;
+use App\Http\Controllers\PasskeyController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ShortLinkController;
+use App\Http\Controllers\TwoFactorSetupController;
+use Illuminate\Support\Facades\Route;
+
+// Public landing page & shortener
+Route::get('/', [ShortLinkController::class, 'publicIndex'])->name('home');
+Route::post('/shorten', [ShortLinkController::class, 'publicStore'])->middleware('throttle:20,1')->name('shorten');
+
+// Passkey authentication routes
+Route::get('/passkeys/authentication-options', [PasskeyLoginController::class, 'options'])->name('passkeys.authentication_options');
+Route::post('/passkeys/authenticate', [PasskeyLoginController::class, 'login'])->name('passkeys.login');
+
+// Guest routes
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'create'])->name('login');
+    Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:5,1');
+
+    Route::get('/two-factor', [TwoFactorChallengeController::class, 'show'])->name('two-factor.challenge');
+    Route::post('/two-factor', [TwoFactorChallengeController::class, 'verify'])->middleware('throttle:10,1')->name('two-factor.verify');
+    Route::post('/two-factor/email', [TwoFactorChallengeController::class, 'sendEmailCode'])->middleware('throttle:3,1')->name('two-factor.email.send');
+    Route::post('/two-factor/cancel', [TwoFactorChallengeController::class, 'cancel'])->name('two-factor.cancel');
+
+    Route::get('/forgot-password', [PasswordResetController::class, 'requestForm'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendLink'])->middleware('throttle:5,1')->name('password.email');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'resetForm'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:5,1')->name('password.update');
+});
+
+// Invite wizard
+Route::get('/invite/{token}', [InviteController::class, 'show'])->name('invite.show');
+Route::post('/invite/{token}', [InviteController::class, 'accept'])->name('invite.accept');
+
+// Authenticated routes
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+
+    Route::get('/passkeys/register-options', [PasskeyController::class, 'registerOptions'])->name('passkeys.register-options');
+    Route::post('/passkeys', [PasskeyController::class, 'store'])->name('passkeys.store');
+
+    Route::get('/two-factor/setup', [TwoFactorEnrollmentController::class, 'show'])->name('two-factor.setup');
+    Route::post('/two-factor/setup/totp', [TwoFactorEnrollmentController::class, 'totpInit'])->name('two-factor.setup.totp.init');
+    Route::post('/two-factor/setup/totp/confirm', [TwoFactorEnrollmentController::class, 'totpConfirm'])->name('two-factor.setup.totp.confirm');
+    Route::post('/two-factor/setup/email', [TwoFactorEnrollmentController::class, 'emailEnable'])->name('two-factor.setup.email.enable');
+});
+
+// Authenticated + 2FA required
+Route::middleware(['auth', '2fa.required'])->group(function () {
+    Route::delete('/passkeys/{passkey}', [PasskeyController::class, 'destroy'])->name('passkeys.destroy');
+
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Feedback
+    Route::post('/feedback', [FeedbackController::class, 'store'])->middleware('throttle:5,1')->name('feedback.store');
+
+    // Changelog
+    Route::get('/changelog', [ChangelogController::class, 'index'])->name('changelog');
+    Route::get('/changelog/image/{file}', [ChangelogController::class, 'image'])->name('changelog.image');
+
+    // Short Links
+    Route::prefix('links')->name('links.')->group(function () {
+        Route::get('/', [ShortLinkController::class, 'index'])->name('index');
+        Route::get('/create', [ShortLinkController::class, 'create'])->name('create');
+        Route::post('/', [ShortLinkController::class, 'store'])->name('store');
+        Route::post('/bulk-destroy', [ShortLinkController::class, 'bulkDestroy'])->name('bulk-destroy');
+        Route::get('/{link}/edit', [ShortLinkController::class, 'edit'])->name('edit');
+        Route::get('/{link}/analytics', [ShortLinkController::class, 'analytics'])->name('analytics');
+        Route::get('/{link}/qr', [ShortLinkController::class, 'qrCode'])->name('qr');
+        Route::put('/{link}', [ShortLinkController::class, 'update'])->name('update');
+        Route::delete('/{link}', [ShortLinkController::class, 'destroy'])->name('destroy');
+    });
+
+    // Profile
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::put('/profile/theme', [ProfileController::class, 'updateTheme'])->name('profile.theme');
+    Route::put('/profile/datetime', [ProfileController::class, 'updateDateTime'])->name('profile.datetime');
+
+    Route::post('/profile/two-factor/totp/setup', [TwoFactorSetupController::class, 'totpSetup'])->name('two-factor.totp.setup');
+    Route::post('/profile/two-factor/totp/confirm', [TwoFactorSetupController::class, 'totpConfirm'])->name('two-factor.totp.confirm');
+    Route::post('/profile/two-factor/totp/disable', [TwoFactorSetupController::class, 'totpDisable'])->name('two-factor.totp.disable');
+    Route::post('/profile/two-factor/recovery-codes', [TwoFactorSetupController::class, 'regenerateRecoveryCodes'])->name('two-factor.recovery-codes.regenerate');
+    Route::post('/profile/two-factor/email/enable', [TwoFactorSetupController::class, 'emailEnable'])->name('two-factor.email.enable');
+    Route::post('/profile/two-factor/email/disable', [TwoFactorSetupController::class, 'emailDisable'])->name('two-factor.email.disable');
+
+    // Admin — super admin only
+    Route::middleware('super_admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/link-stats', [AdminShortLinkStatsController::class, 'index'])->name('link-stats');
+    });
+
+    // Admin — admin + super admin
+    Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::resource('users', AdminUserController::class)->except(['show']);
+        Route::post('/users/{user}/password-reset', [AdminUserController::class, 'sendPasswordReset'])->name('users.password-reset');
+        Route::post('/users/{user}/reset-2fa', [AdminUserController::class, 'resetTwoFactor'])->name('users.reset-2fa');
+        Route::post('/invites', [AdminUserController::class, 'storeInvite'])->name('invites.store');
+        Route::post('/invites/{invite}/resend', [AdminUserController::class, 'resendInvite'])->name('invites.resend');
+        Route::delete('/invites/{invite}', [AdminUserController::class, 'destroyInvite'])->name('invites.destroy');
+    });
+});
+
+// Short link public redirect — catch-all, must be last
+Route::get('/{alias}', [ShortLinkController::class, 'redirect'])
+    ->where('alias', '[a-zA-Z0-9_-]{5,}')
+    ->name('short-link.redirect');
