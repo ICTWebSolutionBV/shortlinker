@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class ShortLinkController extends Controller
@@ -139,13 +140,13 @@ class ShortLinkController extends Controller
             'is_burn'      => ['boolean'],
             'is_tracking'  => ['boolean'],
             'expires_in'   => ['nullable', 'string', 'in:never,1h,2h,4h,6h,12h,1d,2d,3d,5d,7d,14d,30d,custom'],
-            'expires_at'   => ['nullable', 'date', 'after:now'],
+            'expires_at'   => ['nullable', 'required_if:expires_in,custom', 'date'],
         ]);
 
         $alias = $data['alias'] ?? $this->generateAlias();
 
         $expiresAt = ($data['expires_in'] ?? 'never') === 'custom'
-            ? ($data['expires_at'] ?? null)
+            ? $this->resolveCustomExpiry($data['expires_at'], $request->user()->timezone)
             : $this->resolveExpiry($data['expires_in'] ?? 'never');
 
         ShortLink::create([
@@ -197,11 +198,11 @@ class ShortLinkController extends Controller
             'is_burn'      => ['boolean'],
             'is_tracking'  => ['boolean'],
             'expires_in'   => ['nullable', 'string', 'in:never,1h,2h,4h,6h,12h,1d,2d,3d,5d,7d,14d,30d,custom'],
-            'expires_at'   => ['nullable', 'date'],
+            'expires_at'   => ['nullable', 'required_if:expires_in,custom', 'date'],
         ]);
 
         $expiresAt = ($data['expires_in'] ?? 'never') === 'custom'
-            ? ($data['expires_at'] ?? null)
+            ? $this->resolveCustomExpiry($data['expires_at'], $request->user()->timezone)
             : $this->resolveExpiry($data['expires_in'] ?? 'never');
 
         $link->update([
@@ -329,6 +330,23 @@ class ShortLinkController extends Controller
             '30d'   => now()->addDays(30),
             default => null,
         };
+    }
+
+    /**
+     * The picker sends a wall-clock time without offset, so read it in the
+     * user's own timezone rather than the app's UTC.
+     */
+    private function resolveCustomExpiry(string $value, ?string $timezone): Carbon
+    {
+        $expiresAt = Carbon::parse($value, $timezone ?: 'Europe/Amsterdam')->utc();
+
+        if ($expiresAt->isPast()) {
+            throw ValidationException::withMessages([
+                'expires_at' => 'The expiry date must be in the future.',
+            ]);
+        }
+
+        return $expiresAt;
     }
 
     private function generateAlias(): string

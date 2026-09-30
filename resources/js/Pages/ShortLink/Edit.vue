@@ -2,6 +2,7 @@
 import { ref, watch, computed } from 'vue'
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import { toInputValues } from '@/utils/datetime'
 
 const props = defineProps({
     link: Object,
@@ -25,6 +26,8 @@ const expiryOptions = [
     { label: 'Custom…', value: 'custom' },
 ]
 
+const currentExpiry = toInputValues(props.link.expires_at)
+
 const form = useForm({
     original_url: props.link.original_url,
     alias: props.link.alias,
@@ -33,17 +36,27 @@ const form = useForm({
     is_burn: props.link.is_burn ?? false,
     is_tracking: props.link.is_tracking ?? true,
     expires_in: props.link.expires_at ? 'custom' : 'never',
-    expires_at: props.link.expires_at
-        ? new Date(props.link.expires_at).toISOString().slice(0, 16)
-        : '',
+    expires_date: currentExpiry.date,
+    expires_time: currentExpiry.time || '23:59',
 })
 
-watch(() => form.expires_in, (v) => { if (v !== 'custom') form.expires_at = '' })
+watch(() => form.expires_in, (v) => { if (v !== 'custom') form.expires_date = '' })
+
+const today = toInputValues(new Date()).date
+
+// Sends wall-clock time; the server reads it in the user's timezone.
+function withExpiry(data) {
+    const { expires_date, expires_time, ...rest } = data
+    return {
+        ...rest,
+        expires_at: rest.expires_in === 'custom' && expires_date ? `${expires_date}T${expires_time || '23:59'}` : null,
+    }
+}
 
 const showQr = ref(false)
 
 function submit() {
-    form.put(route('links.update', props.link.id))
+    form.transform(withExpiry).put(route('links.update', props.link.id))
 }
 </script>
 
@@ -172,9 +185,14 @@ function submit() {
                         <!-- Custom date picker -->
                         <Transition enter-active-class="transition ease-out duration-200" enter-from-class="opacity-0 -translate-y-1" enter-to-class="opacity-100 translate-y-0">
                             <div v-if="form.expires_in === 'custom'">
-                                <input v-model="form.expires_at" type="datetime-local"
-                                    :class="form.errors.expires_at ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 dark:border-gray-700 focus:ring-primary-500'"
-                                    class="w-full px-4 py-3 text-sm border rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:bg-white dark:focus:bg-gray-800 transition-colors" />
+                                <div class="flex gap-3">
+                                    <input v-model="form.expires_date" type="date" :min="today" aria-label="Expiry date"
+                                        :class="form.errors.expires_at ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 dark:border-gray-700 focus:ring-primary-500'"
+                                        class="flex-1 min-w-0 px-4 py-3 text-sm border rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:bg-white dark:focus:bg-gray-800 transition-colors" />
+                                    <input v-model="form.expires_time" type="time" aria-label="Expiry time"
+                                        :class="form.errors.expires_at ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 dark:border-gray-700 focus:ring-primary-500'"
+                                        class="w-32 px-4 py-3 text-sm border rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:bg-white dark:focus:bg-gray-800 transition-colors" />
+                                </div>
                                 <p v-if="form.errors.expires_at" class="mt-1.5 text-xs text-red-500">{{ form.errors.expires_at }}</p>
                             </div>
                         </Transition>

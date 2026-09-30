@@ -78,3 +78,12 @@ export function formatDateTime(iso, prefs) {
     const parts = toParts(iso, p.timezone)
     return `${applyDate(parts, p.dateFormat)} ${applyTime(parts, p.timeFormat)}`
 }
+
+// Splits a moment into the `YYYY-MM-DD` / `HH:mm` values that native date and
+// time inputs expect, as wall-clock time in the given timezone.
+export function toInputValues(iso, prefs) {
+    const p = prefs || useDateTimePrefs()
+    const parts = toParts(iso, p.timezone)
+    if (!parts) return { date: '', time: '' }
+    return { date: `${parts.YYYY}-${parts.MM}-${parts.DD}`, time: `${parts.HH}:${parts.mm}` }
+}
